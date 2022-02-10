@@ -19,7 +19,7 @@ db.on('error', console.error.bind(console, 'MongoDB Connection Error'));
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use('/', indexRouter);
@@ -40,7 +40,7 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.send('Error');
 });
 
 module.exports = app;

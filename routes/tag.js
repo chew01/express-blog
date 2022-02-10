@@ -1,24 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const tagController = require('../controllers/tagController');
 
-router.get('/', function (req, res, next) {
-  res.send('get tags');
-});
+router.get('/', tagController.getTags);
 
-router.post('/', function (req, res, next) {
-  res.send('post tags');
-});
+router.post('/', tagController.createTag);
 
-router.get('/:tagName', function (req, res, next) {
-  res.send('get tagName ' + req.params.tagName);
-});
+router.get('/:tagName', tagController.getPostsWithTagName);
 
-router.put('/:tagName', function (req, res, next) {
-  res.send('put tagName ' + req.params.tagName);
-});
+router.put('/:tagName', tagController.updateTagWithTagName);
 
-router.delete('/:tagName', function (req, res, next) {
-  res.send('delete tagName ' + req.params.tagName);
-});
+router.delete('/:tagName', tagController.deleteTagWithTagName);
 
 module.exports = router;
