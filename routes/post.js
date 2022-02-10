@@ -7,11 +7,11 @@ router.get('/', postController.getPosts);
 
 router.post('/', postController.createPost);
 
-router.get('/:postId', postController.getPostWithId);
+router.get('/:postId', postController.getPostWithLink);
 
-router.put('/:postId', postController.updatePostWithId);
+router.put('/:postId', postController.updatePostWithLink);
 
-router.delete('/:postId', postController.deletePostWithId);
+router.delete('/:postId', postController.deletePostWithLink);
 
 router.get('/:postId/comments', commentController.getCommentsWithPostId);
 

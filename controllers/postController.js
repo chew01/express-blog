@@ -1,6 +1,7 @@
 const { body, validationResult } = require('express-validator');
 const Post = require('../models/post');
 const User = require('../models/user');
+const { DateTime } = require('luxon');
 
 exports.getPosts = (req, res, next) => {
   Post.find({}, { _id: 0, __v: 0 })
@@ -21,8 +22,17 @@ exports.createPost = [
     .trim()
     .isBoolean()
     .toBoolean(),
+  body('hyperlink')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Hyperlink cannot be empty')
+    .escape(),
+
   (req, res, next) => {
     const errors = validationResult(req);
+
+    const formattedHyperlink =
+      DateTime.fromJSDate(new Date()).toISODate() + '-' + req.body.hyperlink;
 
     const post = new Post({
       title: req.body.title,
@@ -30,39 +40,53 @@ exports.createPost = [
       tags: req.body.tags,
       author: req.body.author,
       isPublished: req.body.isPublished,
+      hyperlink: formattedHyperlink,
     });
 
     if (!errors.isEmpty()) {
       return res.status(400).send({ status: 'fail', data: errors });
     }
     User.findById(req.body.author).exec((err, result) => {
+      if (err) return next(err);
       if (!result) {
         return res
           .status(400)
           .send({ status: 'fail', data: 'Author provided does not exist.' });
       }
-      post.save((err) => {
+      Post.find({ hyperlink: formattedHyperlink }).exec((err, result) => {
         if (err) return next(err);
-        return res.status(201).send({
-          status: 'success',
-          data: 'Post successfully created.',
+        if (result.length > 0) {
+          return res.status(400).send({
+            status: 'fail',
+            data: 'A post has already been created with the same hyperlink.',
+          });
+        }
+        post.save((err) => {
+          if (err) return next(err);
+          return res.status(201).send({
+            status: 'success',
+            data: 'Post successfully created at ' + post.url,
+          });
         });
       });
     });
   },
 ];
 
-exports.getPostWithId = (req, res, next) => {
-  Post.findById(req.params.postId, { _id: 0, __v: 0 })
+exports.getPostWithLink = (req, res, next) => {
+  Post.find({ hyperlink: req.params.postId }, { _id: 0, __v: 0 })
     .populate('author')
     .exec((err, result) => {
-      if (!result)
-        return res.send({ status: 'fail', data: 'Post does not exist' });
+      if (err) return next(err);
+      if (result.length === 0)
+        return res
+          .status(404)
+          .send({ status: 'fail', data: 'Post does not exist' });
       return res.send({ status: 'success', data: result });
     });
 };
 
-exports.updatePostWithId = [
+exports.updatePostWithLink = [
   body('title', 'Title cannot be empty').trim().isLength({ min: 1 }).escape(),
   body('content').escape(),
   body('tags.*').escape(),
@@ -71,51 +95,48 @@ exports.updatePostWithId = [
     .trim()
     .isBoolean()
     .toBoolean(),
+
   (req, res, next) => {
     const errors = validationResult(req);
 
-    const post = new Post({
+    const post = {
       title: req.body.title,
       content: req.body.content,
       tags: req.body.tags,
       author: req.body.author,
       isPublished: req.body.isPublished,
-      _id: req.params.postId,
-    });
+    };
 
     if (!errors.isEmpty()) {
       return res.status(400).send({ status: 'fail', data: errors });
     }
     User.findById(req.body.author).exec((err, result) => {
+      if (err) return next(err);
       if (!result) {
         return res
           .status(400)
           .send({ status: 'fail', data: 'Author provided does not exist.' });
       }
-      Post.findByIdAndUpdate(
-        req.params.postId,
-        post,
-        {},
-        (err, updatedPost) => {
-          if (err) return next(err);
-          res.send({
-            status: 'success',
-            data: 'Post was successfully updated.',
-          });
-        }
-      );
+      Post.updateOne({ hyperlink: req.params.postId }, post, (err) => {
+        if (err) return next(err);
+        return res.status(201).send({
+          status: 'success',
+          data: 'Post successfully updated at /posts/' + req.params.postId,
+        });
+      });
     });
   },
 ];
 
-exports.deletePostWithId = (req, res, next) => {
-  Post.findById(req.params.postId).exec((err, result) => {
-    if (!result) {
+exports.deletePostWithLink = (req, res, next) => {
+  Post.find({ hyperlink: req.params.postId }).exec((err, result) => {
+    if (err) return next(err);
+    if (result.length === 0) {
       return res
         .status(400)
         .send({ status: 'fail', data: 'Post does not exist.' });
     }
-    Post.findByIdAndRemove(req.params.postId, (err) => {
+    Post.deleteOne({ hyperlink: req.params.postId }, (err) => {
       if (err) return next(err);
       return res.send({
         status: 'success',
