@@ -13,19 +13,17 @@ router.put('/:postLink', postController.updatePostWithLink);
 
 router.delete('/:postLink', postController.deletePostWithLink);
 
-router.get('/:postLink/comments', commentController.getCommentsWithPostId);
+router.get('/:postLink/comments', commentController.getCommentsWithPostLink);
 
-router.post('/:postLink/comments', commentController.createCommentWithPostId);
+router.post('/:postLink/comments', commentController.createCommentWithPostLink);
 
-router.get(':postLink/comments/:commentId', commentController.getCommentWithId);
-
-router.put(
-  ':postLink/comments/:commentId',
-  commentController.updateCommentWithId
+router.get(
+  '/:postLink/comments/:commentId',
+  commentController.getCommentWithId
 );
 
 router.delete(
-  ':postLink/comments/:commentId',
+  '/:postLink/comments/:commentId',
   commentController.deleteCommentWithId
 );
 

@@ -5,7 +5,8 @@ const { DateTime } = require('luxon');
 const async = require('async');
 
 exports.getPosts = (req, res, next) => {
-  Post.find({}, { _id: 0, __v: 0 })
+  Post.find()
+    .populate('tags')
     .populate('author')
     .sort()
     .exec((err, result) => {
@@ -77,7 +78,8 @@ exports.createPost = [
 ];
 
 exports.getPostWithLink = (req, res, next) => {
-  Post.findOne({ hyperlink: req.params.postLink }, { _id: 0, __v: 0 })
+  Post.findOne({ hyperlink: req.params.postLink })
+    .populate('tags')
     .populate('author')
     .exec((err, result) => {
       if (err) return next(err);

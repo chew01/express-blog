@@ -5,7 +5,7 @@ const PostSchema = new Schema(
   {
     title: { type: String, required: true },
     content: { type: String },
-    tags: { type: [Schema.Types.ObjectId], ref: 'Tag' },
+    tags: [{ type: Schema.Types.ObjectId, ref: 'Tag', required: true }],
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isPublished: { type: Boolean, required: true },
     hyperlink: { type: String, required: true },
