@@ -4,28 +4,32 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+require('./passport');
 
-const indexRouter = require('./routes/index');
+const auth = require('./routes/auth');
 const postRouter = require('./routes/post');
 const tagRouter = require('./routes/tag');
 const userRouter = require('./routes/user');
 
 const app = express();
 
+// set up mongodb
 const mongoDB = process.env.MONGODB_URI;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB Connection Error'));
 
+// set up logging/parsing middleware
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use('/', indexRouter);
-app.use('/posts', postRouter);
-app.use('/tags', tagRouter);
-app.use('/users', userRouter);
+// set up routers
+app.use('/auth', auth);
+app.use('/api/posts', postRouter);
+app.use('/api/tags', tagRouter);
+app.use('/api/users', userRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
