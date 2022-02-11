@@ -7,25 +7,25 @@ router.get('/', postController.getPosts);
 
 router.post('/', postController.createPost);
 
-router.get('/:postId', postController.getPostWithLink);
+router.get('/:postLink', postController.getPostWithLink);
 
-router.put('/:postId', postController.updatePostWithLink);
+router.put('/:postLink', postController.updatePostWithLink);
 
-router.delete('/:postId', postController.deletePostWithLink);
+router.delete('/:postLink', postController.deletePostWithLink);
 
-router.get('/:postId/comments', commentController.getCommentsWithPostId);
+router.get('/:postLink/comments', commentController.getCommentsWithPostId);
 
-router.post('/:postId/comments', commentController.createCommentWithPostId);
+router.post('/:postLink/comments', commentController.createCommentWithPostId);
 
-router.get(':postId/comments/:commentId', commentController.getCommentWithId);
+router.get(':postLink/comments/:commentId', commentController.getCommentWithId);
 
 router.put(
-  ':postId/comments/:commentId',
+  ':postLink/comments/:commentId',
   commentController.updateCommentWithId
 );
 
 router.delete(
-  ':postId/comments/:commentId',
+  ':postLink/comments/:commentId',
   commentController.deleteCommentWithId
 );
 

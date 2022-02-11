@@ -2,6 +2,7 @@ const { body, validationResult } = require('express-validator');
 const Post = require('../models/post');
 const User = require('../models/user');
 const { DateTime } = require('luxon');
+const async = require('async');
 
 exports.getPosts = (req, res, next) => {
   Post.find({}, { _id: 0, __v: 0 })
@@ -26,6 +27,8 @@ exports.createPost = [
     .trim()
     .isLength({ min: 1 })
     .withMessage('Hyperlink cannot be empty')
+    .isBase64({ urlSafe: true })
+    .withMessage('Hyperlink is not URL safe')
     .escape(),
 
   (req, res, next) => {
@@ -51,14 +54,14 @@ exports.createPost = [
       if (!result) {
         return res
           .status(400)
-          .send({ status: 'fail', data: 'Author provided does not exist.' });
+          .send({ status: 'fail', data: 'Author provided does not exist' });
       }
-      Post.find({ hyperlink: formattedHyperlink }).exec((err, result) => {
+      Post.findOne({ hyperlink: formattedHyperlink }).exec((err, result) => {
         if (err) return next(err);
-        if (result.length > 0) {
+        if (result) {
           return res.status(400).send({
             status: 'fail',
-            data: 'A post has already been created with the same hyperlink.',
+            data: 'A post has already been created with the same hyperlink',
           });
         }
         post.save((err) => {
@@ -74,11 +77,11 @@ exports.createPost = [
 ];
 
 exports.getPostWithLink = (req, res, next) => {
-  Post.find({ hyperlink: req.params.postId }, { _id: 0, __v: 0 })
+  Post.findOne({ hyperlink: req.params.postLink }, { _id: 0, __v: 0 })
     .populate('author')
     .exec((err, result) => {
       if (err) return next(err);
-      if (result.length === 0)
+      if (!result)
         return res
           .status(404)
           .send({ status: 'fail', data: 'Post does not exist' });
@@ -110,37 +113,50 @@ exports.updatePostWithLink = [
     if (!errors.isEmpty()) {
       return res.status(400).send({ status: 'fail', data: errors });
     }
-    User.findById(req.body.author).exec((err, result) => {
-      if (err) return next(err);
-      if (!result) {
-        return res
-          .status(400)
-          .send({ status: 'fail', data: 'Author provided does not exist.' });
-      }
-      Post.updateOne({ hyperlink: req.params.postId }, post, (err) => {
+    async.parallel(
+      {
+        post: (callback) => {
+          Post.findOne({ hyperlink: req.params.postLink }).exec(callback);
+        },
+        author: (callback) => {
+          User.findById(req.body.author).exec(callback);
+        },
+      },
+      (err, result) => {
         if (err) return next(err);
-        return res.status(201).send({
-          status: 'success',
-          data: 'Post successfully updated at /posts/' + req.params.postId,
+        if (!result.post)
+          return res
+            .status(400)
+            .send({ status: 'fail', data: 'Post does not exist' });
+        if (!result.author)
+          return res
+            .status(400)
+            .send({ status: 'fail', data: 'Author provided does not exist' });
+        Post.updateOne({ hyperlink: req.params.postLink }, post, (err) => {
+          if (err) return next(err);
+          return res.send({
+            status: 'success',
+            data: 'Post successfully updated at /posts/' + req.params.postLink,
+          });
         });
-      });
-    });
+      }
+    );
   },
 ];
 
 exports.deletePostWithLink = (req, res, next) => {
-  Post.find({ hyperlink: req.params.postId }).exec((err, result) => {
+  Post.findOne({ hyperlink: req.params.postLink }).exec((err, result) => {
     if (err) return next(err);
-    if (result.length === 0) {
+    if (!result) {
       return res
         .status(400)
-        .send({ status: 'fail', data: 'Post does not exist.' });
+        .send({ status: 'fail', data: 'Post does not exist' });
     }
-    Post.deleteOne({ hyperlink: req.params.postId }, (err) => {
+    Post.deleteOne({ hyperlink: req.params.postLink }, (err) => {
       if (err) return next(err);
       return res.send({
         status: 'success',
-        data: 'Post was successfully removed.',
+        data: 'Post was successfully removed',
       });
     });
   });
