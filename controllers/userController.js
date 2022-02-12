@@ -4,7 +4,7 @@ const async = require('async');
 const Post = require('../models/post');
 
 exports.getUsers = (req, res, next) => {
-  User.find()
+  User.find({}, { __v: 0, password: 0 })
     .sort()
     .exec((err, result) => {
       if (err) return next(err);
@@ -74,16 +74,16 @@ exports.createUser = [
   },
 ];
 
-exports.getPostsWithUserName = (req, res, next) => {
+exports.getPublicPostsWithUserName = (req, res, next) => {
   User.findOne({ name: req.params.userName }).exec((err, result) => {
     if (err) return next(err);
     if (!result)
       return res
         .status(404)
         .send({ status: 'fail', data: 'User does not exist' });
-    Post.find({ author: result._id })
-      .populate('tags')
-      .populate('author')
+    Post.find({ author: result._id, isPublished: true }, { __v: 0 })
+      .populate('tags', { name: 1 })
+      .populate('author', { name: 1 })
       .sort()
       .exec((err, result) => {
         if (err) return next(err);
@@ -163,5 +163,23 @@ exports.deleteUserWithName = (req, res) => {
       if (err) return next(err);
       return res.send({ status: 'success', data: 'User successfully removed' });
     });
+  });
+};
+
+exports.getAllPostsWithUserName = (req, res, next) => {
+  User.findOne({ name: req.params.userName }).exec((err, result) => {
+    if (err) return next(err);
+    if (!result)
+      return res
+        .status(404)
+        .send({ status: 'fail', data: 'User does not exist' });
+    Post.find({ author: result._id }, { __v: 0 })
+      .populate('tags', { name: 1 })
+      .populate('author', { name: 1 })
+      .sort()
+      .exec((err, result) => {
+        if (err) return next(err);
+        res.send({ status: 'success', data: result });
+      });
   });
 };

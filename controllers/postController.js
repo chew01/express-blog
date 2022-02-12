@@ -4,10 +4,10 @@ const User = require('../models/user');
 const { DateTime } = require('luxon');
 const async = require('async');
 
-exports.getPosts = (req, res, next) => {
-  Post.find()
-    .populate('tags')
-    .populate('author')
+exports.getPublicPosts = (req, res, next) => {
+  Post.find({ isPublished: true }, { __v: 0 })
+    .populate('tags', { name: 1 })
+    .populate('author', { name: 1 })
     .sort()
     .exec((err, result) => {
       if (err) return next(err);
@@ -77,10 +77,21 @@ exports.createPost = [
   },
 ];
 
+exports.getAllPosts = (req, res, next) => {
+  Post.find({}, { __v: 0 })
+    .populate('tags', { name: 1 })
+    .populate('author', { name: 1 })
+    .sort()
+    .exec((err, result) => {
+      if (err) return next(err);
+      return res.send({ status: 'success', data: result });
+    });
+};
+
 exports.getPostWithLink = (req, res, next) => {
-  Post.findOne({ hyperlink: req.params.postLink })
-    .populate('tags')
-    .populate('author')
+  Post.findOne({ hyperlink: req.params.postLink }, { __v: 0 })
+    .populate('tags', { name: 1 })
+    .populate('author', { name: 1 })
     .exec((err, result) => {
       if (err) return next(err);
       if (!result)

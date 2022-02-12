@@ -3,7 +3,7 @@ const Tag = require('../models/tag');
 const Post = require('../models/post');
 
 exports.getTags = (req, res, next) => {
-  Tag.find({})
+  Tag.find({}, { name: 1 })
     .sort()
     .exec((err, result) => {
       if (err) return next(err);
@@ -47,7 +47,7 @@ exports.createTag = [
   },
 ];
 
-exports.getPostsWithTagName = (req, res, next) => {
+exports.getPublicPostsWithTagName = (req, res, next) => {
   Tag.findOne({ name: req.params.tagName }).exec((err, result) => {
     if (err) return next(err);
     if (!result) {
@@ -55,9 +55,9 @@ exports.getPostsWithTagName = (req, res, next) => {
         .status(404)
         .send({ status: 'fail', data: 'Tag does not exist' });
     }
-    Post.find({ tags: result._id })
-      .populate('tags')
-      .populate('author')
+    Post.find({ tags: result._id, isPublished: true }, { __v: 0 })
+      .populate('tags', { name: 1 })
+      .populate('author', { name: 1 })
       .sort()
       .exec((err, result) => {
         if (err) return next(err);
@@ -115,5 +115,24 @@ exports.deleteTagWithTagName = (req, res) => {
         data: 'Tag was successfully removed',
       });
     });
+  });
+};
+
+exports.getAllPostsWithTagName = (req, res) => {
+  Tag.findOne({ name: req.params.tagName }).exec((err, result) => {
+    if (err) return next(err);
+    if (!result) {
+      return res
+        .status(404)
+        .send({ status: 'fail', data: 'Tag does not exist' });
+    }
+    Post.find({ tags: result._id }, { __v: 0 })
+      .populate('tags', { name: 1 })
+      .populate('author', { name: 1 })
+      .sort()
+      .exec((err, result) => {
+        if (err) return next(err);
+        return res.send({ status: 'success', data: result });
+      });
   });
 };

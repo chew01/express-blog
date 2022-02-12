@@ -1,6 +1,10 @@
+require('dotenv').config();
 const passport = require('passport');
 const User = require('./models/user');
 const LocalStrategy = require('passport-local').Strategy;
+const passportJWT = require('passport-jwt');
+const JWTStrategy = passportJWT.Strategy;
+const ExtractJWT = passportJWT.ExtractJwt;
 const bcrypt = require('bcryptjs');
 
 passport.use(
@@ -19,9 +23,21 @@ passport.use(
           if (err) return cb(err);
           if (!result)
             return cb(null, false, { message: 'Incorrect email or password' });
-          return cb(null, user);
+          return cb(null, user, { message: 'Logged in successfully' });
         });
       });
+    }
+  )
+);
+
+passport.use(
+  new JWTStrategy(
+    {
+      jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+      secretOrKey: process.env.JWT_SECRET,
+    },
+    function (jwtPayload, cb) {
+      return cb(null, jwtPayload);
     }
   )
 );
