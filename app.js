@@ -28,7 +28,7 @@ app.use(cookieParser());
 
 app.use(cors());
 // set up routers
-app.use('/auth', auth);
+app.use('/api/auth', auth);
 app.use('/api/posts', postRouter);
 app.use('/api/tags', tagRouter);
 app.use('/api/users', userRouter);
