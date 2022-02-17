@@ -12,7 +12,7 @@ exports.getCommentsWithPostLink = (req, res, next) => {
         .send({ status: 'fail', data: 'Post does not exist' });
     Comment.find({ post: result._id })
       .populate('post')
-      .sort()
+      .sort({ createdAt: -1 })
       .exec((err, comments) => {
         if (err) return next(err);
         return res.send({ status: 'success', data: comments });

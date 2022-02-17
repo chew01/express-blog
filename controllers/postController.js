@@ -8,7 +8,7 @@ exports.getPublicPosts = (req, res, next) => {
   Post.find({ isPublished: true }, { __v: 0 })
     .populate('tags', { name: 1 })
     .populate('author', { name: 1 })
-    .sort()
+    .sort({ createdAt: -1 })
     .exec((err, result) => {
       if (err) return next(err);
       return res.send({ status: 'success', data: result });
@@ -81,7 +81,7 @@ exports.getAllPosts = (req, res, next) => {
   Post.find({}, { __v: 0 })
     .populate('tags', { name: 1 })
     .populate('author', { name: 1 })
-    .sort()
+    .sort({ createdAt: -1 })
     .exec((err, result) => {
       if (err) return next(err);
       return res.send({ status: 'success', data: result });
