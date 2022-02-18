@@ -17,7 +17,8 @@ exports.loginUser = (req, res, next) => {
           email: mongooseUser.email,
         };
         const token = jwt.sign(user, process.env.JWT_SECRET);
-        return res.send({ user, token });
+        res.cookie('token', token, { maxAge: 86400000, httpOnly: true });
+        return;
       });
     }
   )(req, res);
