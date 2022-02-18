@@ -31,3 +31,10 @@ Lastly, **Views** were reserved for the front-end sites built with React and Tai
 - Express Validator for server-side form validation
 - Cookie Parser for parsing cookies containing JWT Token
 - Dotenv for environment variables, thereby securing MongoDB URLs/API keys
+
+## To-do List
+I've stopped short of completing a few things due to reasons such as not having a proper server to deploy on.
+
+- Complete the UI for the editor
+- Securing CORS options (dependent on hosting)
+- Production optimisation (e.g. Secure cookies)
